@@ -65,10 +65,7 @@ uchar* resizedBmp(uchar* image, int scale) {
 	{
 		for (int j = 0; j < scale; j++)
 		{
-			
 			resized[2*i + j] = image[i];
-			
-			
 		}
 	}
 	return resized;
