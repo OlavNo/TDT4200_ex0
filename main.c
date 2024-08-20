@@ -56,7 +56,7 @@ void isolateColor(uchar* image, uchar c) {
 	}
 }
 
-
+// Copy pixel from old index to new index
 void copyPixel(uchar* new, uchar* old, int posNew, int posOld) {
 	
 	new[posNew*3] = old[posOld*3];
@@ -64,6 +64,7 @@ void copyPixel(uchar* new, uchar* old, int posNew, int posOld) {
 	new[posNew*3 + 2] = old[posOld*3 + 2];
 }
 
+// Scale selected row using old image
 void scaleRow(uchar* new, uchar* old, int rowNew, int rowOld) {
 	for (int i = 1; i < XSIZE; i++)
 	{
@@ -72,6 +73,7 @@ void scaleRow(uchar* new, uchar* old, int rowNew, int rowOld) {
 	}
 }
 
+// Create a new image double the size
 uchar* doubleSize(uchar* image) {
 	uchar *resized = calloc(4 * XSIZE * YSIZE * 3 , 1);
 	
@@ -92,17 +94,18 @@ int main(void)
 
 	
 	// Alter the image here
+
+	// grayscale(image);
 	
 	// invertColor(image);
 
-	isolateColor(image, 'g');
+	isolateColor(image, 'r');
 
-	uchar *bigger = doubleSize(image);
-	// grayscale(image);
+	uchar *largeImage = doubleSize(image);
 
-	savebmp("after.bmp", bigger, XSIZE * 2, YSIZE * 2);
+	savebmp("after.bmp", largeImage, XSIZE * 2, YSIZE * 2);
 
 	free(image);
-	free(bigger);
+	free(largeImage);
 	return 0;
 }
