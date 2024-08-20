@@ -57,17 +57,30 @@ void isolateColor(uchar* image, uchar c) {
 }
 
 
-uchar* resizedBmp(uchar* image, int scale) {
-	uchar *resized = calloc(XSIZE * scale * YSIZE * scale * 3 , 1);
+void copyPixel(uchar* new, uchar* old, int posNew, int posOld) {
 	
+	new[posNew*3] = old[posOld*3];
+	new[posNew*3 + 1] = old[posOld*3 + 1];
+	new[posNew*3 + 2] = old[posOld*3 + 2];
+}
 
-	for (int i = 0; i < XSIZE * YSIZE * 3; i++)
+void scaleRow(uchar* new, uchar* old, int rowNew, int rowOld) {
+	for (int i = 1; i < XSIZE; i++)
 	{
-		for (int j = 0; j < scale; j++)
-		{
-			resized[2*i + j] = image[i];
-		}
+		copyPixel(new, old, i*2 + rowNew * XSIZE * 2, i + rowOld * XSIZE);
+		copyPixel(new, old, i*2 - 1 + rowNew * XSIZE * 2, i + rowOld * XSIZE);
 	}
+}
+
+uchar* doubleSize(uchar* image) {
+	uchar *resized = calloc(4 * XSIZE * YSIZE * 3 , 1);
+	
+	for (int j = 1; j < YSIZE; j++)
+	{
+		scaleRow(resized, image, j*2, j);
+		scaleRow(resized, image, j*2 - 1, j);	
+	}
+	
 	return resized;
 }
 
@@ -82,9 +95,9 @@ int main(void)
 	
 	// invertColor(image);
 
-	// isolateColor(image, 'r');
+	isolateColor(image, 'g');
 
-	uchar *bigger = resizedBmp(image, 2);
+	uchar *bigger = doubleSize(image);
 	// grayscale(image);
 
 	savebmp("after.bmp", bigger, XSIZE * 2, YSIZE * 2);
