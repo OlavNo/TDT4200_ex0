@@ -61,7 +61,7 @@ uchar* resizedBmp(uchar* image, int scale) {
 	uchar *resized = calloc(XSIZE * scale * YSIZE * scale * 3 , 1);
 	
 
-	for (int i = 0; i < XSIZE * YSIZE * 3; i++)
+	for (int i = 0; i < XSIZE * YSIZE * 3; i+=3)
 	{
 		for (int j = 0; j < scale; j++)
 		{
