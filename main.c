@@ -4,11 +4,11 @@
 
 #define XSIZE 2560 // Size of before image
 #define YSIZE 2048
-
+#define CHANNELS 3 // RGB colors
 
 
 void invertColor(uchar* image) {
-	for (int i = 0; i < XSIZE * YSIZE * 3; i++)	
+	for (int i = 0; i < XSIZE * YSIZE * CHANNELS; i++)	
 	{
 		image[i] = 255 - image[i];
 	}
@@ -17,7 +17,7 @@ void invertColor(uchar* image) {
 void grayscale(uchar* image) {
 	uchar red, green, blue;
 	uchar gray;
-	for (int i = 0; i < XSIZE * YSIZE * 3; i += 3)	
+	for (int i = 0; i < XSIZE * YSIZE * CHANNELS; i += CHANNELS)	
 	{
 		blue = image[i];
 		green = image[i + 1];
@@ -33,7 +33,7 @@ void grayscale(uchar* image) {
 
 void isolateColor(uchar* image, uchar c) {
 
-	for (int i = 0; i < XSIZE * YSIZE * 3; i += 3)	
+	for (int i = 0; i < XSIZE * YSIZE * CHANNELS; i += CHANNELS)	
 	{	
 		switch (c)
 		{
@@ -57,30 +57,45 @@ void isolateColor(uchar* image, uchar c) {
 }
 
 // Copy pixel from old index to new index
-void copyPixel(uchar* new, uchar* old, int posNew, int posOld) {
-	
-	new[posNew*3] = old[posOld*3];
-	new[posNew*3 + 1] = old[posOld*3 + 1];
-	new[posNew*3 + 2] = old[posOld*3 + 2];
-}
-
-// Scale selected row using old image
-void scaleRow(uchar* new, uchar* old, int rowNew, int rowOld) {
-	for (int i = 1; i < XSIZE; i++)
+void copyPixel(uchar* newImage, uchar* oldImage, int newPos, int oldPos) {
+	for (int i = 0; i < CHANNELS; i++)
 	{
-		copyPixel(new, old, i*2 + rowNew * XSIZE * 2, i + rowOld * XSIZE);
-		copyPixel(new, old, i*2 - 1 + rowNew * XSIZE * 2, i + rowOld * XSIZE);
+		newImage[newPos*CHANNELS + i] = oldImage[oldPos*CHANNELS + i];
 	}
 }
 
-// Create a new image double the size
-uchar* doubleSize(uchar* image) {
-	uchar *resized = calloc(4 * XSIZE * YSIZE * 3 , 1);
+// Scale selected row using old image
+void scaleRow(uchar* newImage, uchar* oldImage, int scale, int newRow, int oldRow) {
 	
-	for (int j = 1; j < YSIZE; j++)
+	int newOffset = newRow * XSIZE * scale;
+	int oldOffset = oldRow * XSIZE;
+
+	for (int i = scale - 1; i < XSIZE; i++)
 	{
-		scaleRow(resized, image, j*2, j);
-		scaleRow(resized, image, j*2 - 1, j);	
+		int newPos = newOffset + i*scale;
+		int oldPos = i + oldOffset;
+
+		// place new pixels scale amount of times
+		for (int j = 0; j < scale; j++)
+		{
+			copyPixel(newImage, oldImage, newPos - j, oldPos);
+		}
+	}
+}
+
+// Create a new image that is scaled
+uchar* scaleImage(uchar* image, int scale) {
+	uchar *resized = calloc(scale * scale * XSIZE * YSIZE * CHANNELS , 1);
+
+	for (int j = scale - 1; j < YSIZE; j++)
+	{
+		int newRow = j*scale;
+		
+		// place new rows scale amount of times
+		for (int i = 0; i < scale; i++)
+		{
+			scaleRow(resized, image, scale, newRow - i, j);
+		}
 	}
 	
 	return resized;
@@ -89,23 +104,24 @@ uchar* doubleSize(uchar* image) {
 
 int main(void)
 {
-	uchar *image = calloc(XSIZE * YSIZE * 3, 1); // Three uchars per pixel (RGB)
+	uchar *image = calloc(XSIZE * YSIZE * CHANNELS, 1); // Three uchars per pixel (RGB)
 	readbmp("before.bmp", image);
 
-	
-	// Alter the image here
+	int scale = 2;
 
 	// grayscale(image);
 	
-	// invertColor(image);
+	invertColor(image);
 
 	isolateColor(image, 'r');
 
-	uchar *largeImage = doubleSize(image);
 
-	savebmp("after.bmp", largeImage, XSIZE * 2, YSIZE * 2);
+	uchar *largeImage = scaleImage(image, scale);
+
+	savebmp("after.bmp", largeImage, XSIZE * scale, YSIZE * scale);
 
 	free(image);
 	free(largeImage);
+	
 	return 0;
 }
